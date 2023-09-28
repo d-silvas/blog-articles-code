@@ -7,10 +7,9 @@ import { HelloComponent } from './hello.component';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { HttpClientModule } from '@angular/common/http';
 
-
 @NgModule({
-  imports:      [ BrowserModule, FormsModule, NgSelectModule, HttpClientModule ],
-  declarations: [ AppComponent, HelloComponent ],
-  bootstrap:    [ AppComponent ]
+  imports: [BrowserModule, FormsModule, NgSelectModule, HttpClientModule],
+  declarations: [AppComponent, HelloComponent],
+  bootstrap: [AppComponent],
 })
-export class AppModule { }
+export class AppModule {}

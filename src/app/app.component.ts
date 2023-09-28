@@ -1,6 +1,6 @@
-import { Component } from "@angular/core";
-import { HttpClient } from "@angular/common/http";
-import { Subject, Observable, of, concat } from "rxjs";
+import { Component } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Subject, Observable, of, concat } from 'rxjs';
 import {
   distinctUntilChanged,
   debounceTime,
@@ -9,16 +9,16 @@ import {
   catchError,
   filter,
   map,
-} from "rxjs/operators";
+} from 'rxjs/operators';
 
 @Component({
-  selector: "my-app",
-  templateUrl: "./app.component.html",
-  styleUrls: ["./app.component.css"],
+  selector: 'my-app',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css'],
 })
 export class AppComponent {
-  photos = [];
-  photosBuffer = [];
+  photos: any[] = [];
+  photosBuffer: any[] = [];
   bufferSize = 50;
   loading = false;
   input$ = new Subject<string>();
@@ -27,7 +27,7 @@ export class AppComponent {
 
   ngOnInit() {
     this.http
-      .get<any[]>("https://jsonplaceholder.typicode.com/photos")
+      .get<any[]>('https://jsonplaceholder.typicode.com/photos')
       .subscribe((photos) => {
         this.photos = photos;
       });
@@ -35,7 +35,7 @@ export class AppComponent {
     this.onSearch();
   }
 
-  fetchMore(term) {
+  fetchMore(term: any) {
     const len = this.photosBuffer.length;
     const more = this.photos
       .filter((x) => x.title.includes(term))
@@ -59,9 +59,9 @@ export class AppComponent {
       });
   }
 
-  private fakeService(term) {
+  private fakeService(term: any) {
     return this.http
-      .get<any[]>("https://jsonplaceholder.typicode.com/photos")
+      .get<any[]>('https://jsonplaceholder.typicode.com/photos')
       .pipe(
         map((data) =>
           data.filter((x: { title: string }) => x.title.includes(term))
