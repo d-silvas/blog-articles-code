@@ -1,0 +1,39 @@
+<app-select-wrap>
+  <!-- <ng-select
+    [items]="photosBuffer"
+    [virtualScroll]="true"
+    [loading]="loading"
+    bindLabel="title"
+    bindValue="thumbnailUrl"
+    placeholder="Select photo"
+    [typeahead]="input$"
+    (scrollToEnd)="fetchMore(select.searchTerm)"
+    #select
+  >
+    <ng-template
+      ng-option-tmp
+      let-item="item"
+      let-index="index"
+      let-search="searchTerm"
+    >
+      <b>{{ index }} </b>
+      <span [ngOptionHighlight]="search">{{ item.title }}</span>
+    </ng-template>
+  </ng-select> -->
+  <ng-select
+    bindLabel="title"
+    bindValue="thumbnailUrl"
+    placeholder="Select photo"
+    #select
+  >
+    <ng-template
+      ng-option-tmp
+      let-item="item"
+      let-index="index"
+      let-search="searchTerm"
+    >
+      <b>{{ index }} </b>
+      <span [ngOptionHighlight]="search">{{ item.title }}</span>
+    </ng-template>
+  </ng-select>
+</app-select-wrap>

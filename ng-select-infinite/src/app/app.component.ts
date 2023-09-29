@@ -9,10 +9,11 @@ import {
   catchError,
   filter,
   map,
+  delay,
 } from 'rxjs/operators';
 
 @Component({
-  selector: 'my-app',
+  selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
 })
@@ -44,7 +45,7 @@ export class AppComponent {
     setTimeout(() => {
       this.loading = false;
       this.photosBuffer = this.photosBuffer.concat(more);
-    }, 200);
+    }, 2000);
   }
 
   onSearch() {
