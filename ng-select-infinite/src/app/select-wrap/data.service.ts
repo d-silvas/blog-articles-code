@@ -15,8 +15,6 @@ import {
   tap,
 } from 'rxjs';
 
-let i = 0;
-
 @Injectable()
 export class DataService {
   photos: any[] = [];
@@ -39,12 +37,8 @@ export class DataService {
   private get searchTerm(): string | null {
     return this.searchTerm$.getValue();
   }
-  num: number;
 
-  constructor(private readonly http: HttpClient) {
-    this.num = i;
-    i += 1;
-  }
+  constructor(private readonly http: HttpClient) {}
 
   init() {
     this.typeahead$
@@ -60,12 +54,12 @@ export class DataService {
       )
       .subscribe({
         next: ({ term, data }) => {
-          this.isLoadItemsInProgress$.next(false);
           console.log('typeahead$ completed');
           this.searchTerm$.next(term);
           this.page = 0;
           this.items$.next([...data]);
         },
+        // I believe this should never happen if we catch the errors inside fakeService
         error: (err) => {
           console.error('ERROR in typeahead$', err);
         },
@@ -84,7 +78,9 @@ export class DataService {
   private fakeService(term: any): Observable<{ term: string; data: any[] }> {
     console.log('FETCHIN', term);
     this.isLoadItemsInProgress$.next(true);
-    // TODO NOT FETCH IF ALREADY AT END OF RESULTS
+    // TODO NOT FETCH IF ALREADY AT END OF RESULTS <-- Can't do in this demo (needs count)
+    const nextBatchStartIndex = this.page * this.size;
+    const nextBatchEndIndex = nextBatchStartIndex + this.size;
     return this.http
       .get<any[]>('https://jsonplaceholder.typicode.com/photos')
       .pipe(
@@ -93,17 +89,11 @@ export class DataService {
           console.log('GOT DATA');
           console.log(this.page, this.size);
           console.log(data.length);
-          //   console.log({
-          //     term,
-          //     data: data
-          //       .filter((x: { title: string }) => x.title.includes(term))
-          //       .slice(this.page * this.size, this.page * this.size + this.size),
-          //   });
           return {
             term,
             data: data
               .filter((x: { title: string }) => x.title.includes(term))
-              .slice(this.page * this.size, this.page * this.size + this.size),
+              .slice(nextBatchStartIndex, nextBatchEndIndex),
           };
         }),
         catchError((err) => {
