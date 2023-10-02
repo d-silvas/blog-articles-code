@@ -1,72 +1,35 @@
-import { Component } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Subject, Observable, of, concat } from 'rxjs';
-import {
-  distinctUntilChanged,
-  debounceTime,
-  switchMap,
-  tap,
-  catchError,
-  filter,
-  map,
-  delay,
-} from 'rxjs/operators';
+import { Component, OnInit } from '@angular/core';
 
 @Component({
   selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'],
+  template: ` <app-select-wrap>
+    <ng-select
+      bindLabel="title"
+      bindValue="thumbnailUrl"
+      placeholder="Select photo"
+      #select
+    >
+      <ng-template ng-label-tmp let-item="item">
+        {{ item.title }}
+      </ng-template>
+      <ng-template
+        ng-option-tmp
+        let-item="item"
+        let-index="index"
+        let-search="searchTerm"
+      >
+        <b>{{ index }} </b>
+        <span [ngOptionHighlight]="search">{{ item.title }}</span>
+      </ng-template>
+      <ng-template ng-header-tmp>
+        <app-select-wrap-filtered-by></app-select-wrap-filtered-by>
+      </ng-template>
+    </ng-select>
+  </app-select-wrap>`,
 })
-export class AppComponent {
-  photos: any[] = [];
-  photosBuffer: any[] = [];
-  bufferSize = 50;
-  loading = false;
-  input$ = new Subject<string>();
+export class AppComponent implements OnInit {
+  filteredBy: string | null = null;
+  constructor() {}
 
-  constructor(private http: HttpClient) {}
-
-  ngOnInit() {
-    this.http
-      .get<any[]>('https://jsonplaceholder.typicode.com/photos')
-      .subscribe((photos) => {
-        this.photos = photos;
-      });
-
-    this.onSearch();
-  }
-
-  fetchMore(term: any) {
-    const len = this.photosBuffer.length;
-    const more = this.photos
-      .filter((x) => x.title.includes(term))
-      .slice(len, this.bufferSize + len);
-    this.loading = true;
-    setTimeout(() => {
-      this.loading = false;
-      this.photosBuffer = this.photosBuffer.concat(more);
-    }, 2000);
-  }
-
-  onSearch() {
-    this.input$
-      .pipe(
-        debounceTime(200),
-        distinctUntilChanged(),
-        switchMap((term) => this.fakeService(term))
-      )
-      .subscribe((data) => {
-        this.photosBuffer = data.slice(0, this.bufferSize);
-      });
-  }
-
-  private fakeService(term: any) {
-    return this.http
-      .get<any[]>('https://jsonplaceholder.typicode.com/photos')
-      .pipe(
-        map((data) =>
-          data.filter((x: { title: string }) => x.title.includes(term))
-        )
-      );
-  }
+  ngOnInit() {}
 }
