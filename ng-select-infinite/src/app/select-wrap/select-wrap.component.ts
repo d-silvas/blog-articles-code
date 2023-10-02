@@ -9,6 +9,7 @@ import {
 import { NgSelectComponent } from '@ng-select/ng-select';
 import { DataService } from './data.service';
 import { BehaviorSubject, Observable, take } from 'rxjs';
+import { SelectWrapFilteredByComponent } from './select-wrap-filtered-by.component';
 
 @Component({
   selector: 'app-select-wrap',
@@ -18,7 +19,11 @@ import { BehaviorSubject, Observable, take } from 'rxjs';
 export class SelectWrapComponent implements AfterContentInit {
   @ContentChild(NgSelectComponent)
   ngSelectComponent!: NgSelectComponent;
+  @ContentChild(SelectWrapFilteredByComponent)
+  selectWrapFilteredByComponent!: SelectWrapFilteredByComponent;
   private selectedItem$ = new BehaviorSubject<any>(null);
+
+  // TODO !! Put selected item FIRST in the list of items
 
   constructor(
     private readonly dataService: DataService,
@@ -32,6 +37,9 @@ export class SelectWrapComponent implements AfterContentInit {
       throw new Error('NgSelect multiple mode not supported');
     }
 
+    // TODO maybe if at some point we don't support filtering, "searchable" should be true
+    this.ngSelectComponent.searchable = false;
+
     this.ngSelectComponent.scrollToEnd.subscribe(() => {
       console.log('Scrolled TO END');
       this.dataService.fetchMore();
@@ -43,12 +51,16 @@ export class SelectWrapComponent implements AfterContentInit {
     // });
 
     // Detect the first time the dropdown is opened, and load data. Maybe this can be configurable via an @Input
-    this.ngSelectComponent.openEvent.pipe(take(1)).subscribe(() => {
-      console.log('OPEN');
-      this.dataService.fetchMore();
-    });
+    // UPDATE: this is not needed now, because the data is loaded on initialization, due to typeahead$ being a
+    // BehaviorSubject emitting null on initialization
+    // UPDATE 2: we added a new parameter, fetchRecords, which we could set to false on initialization if we wanted, to
+    // prevent the service from fetching data on initialization
+    // this.ngSelectComponent.openEvent.pipe(take(1)).subscribe(() => {
+    //   console.log('OPEN');
+    //   this.dataService.fetchMore();
+    // });
 
-    this.ngSelectComponent.typeahead = this.dataService.typeahead$;
+    // this.ngSelectComponent.typeahead = this.dataService.typeahead$;
 
     this.dataService.isLoadItemsInProgress$.subscribe((i) => {
       console.log('loadItems', i);
@@ -66,14 +78,5 @@ export class SelectWrapComponent implements AfterContentInit {
       this.ngSelectComponent.ngOnChanges({ items: { currentValue: i } as any });
       this.ngSelectComponent.detectChanges();
     });
-
-    this.dataService.init();
-  }
-
-  clearFilter() {
-    console.log('clearFilter !!');
-    this.ngSelectComponent.searchTerm = null as any;
-    this.ngSelectComponent.detectChanges();
-    // TODO here we have to fetch initial records from the service (it is indeed possible)
   }
 }

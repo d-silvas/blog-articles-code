@@ -5,6 +5,7 @@ import {
   Observable,
   Subject,
   catchError,
+  debounce,
   debounceTime,
   delay,
   distinctUntilChanged,
@@ -13,21 +14,28 @@ import {
   of,
   switchMap,
   tap,
+  timer,
 } from 'rxjs';
 
 @Injectable()
 export class DataService {
-  photos: any[] = [];
-  photosBuffer: any[] = [];
-  bufferSize = 50;
   size = 20;
-  loading = false;
   // TODO maybe BehaviorSubject, but maybe NOT, because we don't want to fetch
   // API results just when this component is initialized. At least, we want to wait for the
   // user to open the dropdown for the first time
-  typeahead$ = new Subject<string>();
+  // UPDATE we are fetching data on initialization now
+  search$ = new BehaviorSubject<{
+    searchTerm: string | null;
+    useDebounceTime: boolean;
+    fetchRecords: boolean;
+  }>({
+    searchTerm: null,
+    useDebounceTime: false,
+    fetchRecords: true,
+  });
   items$ = new BehaviorSubject<any[]>([]);
   page = 0;
+  // TODO see if this can be extracted from search$
   searchTerm$ = new BehaviorSubject<string | null>(null);
   isLoadItemsInProgress$ = new BehaviorSubject<boolean>(false);
 
@@ -38,19 +46,19 @@ export class DataService {
     return this.searchTerm$.getValue();
   }
 
-  constructor(private readonly http: HttpClient) {}
-
-  init() {
-    this.typeahead$
+  constructor(private readonly http: HttpClient) {
+    this.search$
       .pipe(
         tap((term) => console.log('typeahead$ started ->', term)),
-        debounceTime(400),
+        filter(({ fetchRecords }) => !!fetchRecords),
+        debounce(({ useDebounceTime }) =>
+          useDebounceTime ? timer(400) : of(null)
+        ),
         // Guarantees "term" is always different than previous
         distinctUntilChanged(),
-        // Ng-select emits a null value when we close the dropdown after having searched.
-        // This can be because one item was selected, or simply because the user clicked outside
-        filter((term) => !!term),
-        switchMap((term) => this.fakeService(term))
+        // Now we control when we emit null. We want to fetch results when WE emit null
+        // filter((term) => !!term),
+        switchMap(({ searchTerm }) => this.fakeService(searchTerm))
       )
       .subscribe({
         next: ({ term, data }) => {
@@ -63,11 +71,14 @@ export class DataService {
         error: (err) => {
           console.error('ERROR in typeahead$', err);
         },
-        complete: () => console.log('!!!!!!!! COMPLETE !!!!!!!!'),
+        complete: () => {
+          console.log('!!!!!!!! COMPLETE !!!!!!!!');
+        },
       });
   }
 
   fetchMore() {
+    // TODO this could cause search$ to emit maybe, and that'd be easier to manage
     this.page += 1;
     this.fakeService(this.searchTerm).subscribe(({ term, data }) => {
       console.log('fetched', data.length);
@@ -89,6 +100,8 @@ export class DataService {
           console.log('GOT DATA');
           console.log(this.page, this.size);
           console.log(data.length);
+          // TODO this may be outside of this function, in the search$ pipe, if we always used that pipe
+          this.isLoadItemsInProgress$.next(false);
           return {
             term,
             data: data
@@ -97,10 +110,10 @@ export class DataService {
           };
         }),
         catchError((err) => {
+          this.isLoadItemsInProgress$.next(false);
           console.error('ERROR in service', err);
           return of({ term, data: [] });
-        }),
-        tap(() => this.isLoadItemsInProgress$.next(false))
+        })
       );
   }
 }
