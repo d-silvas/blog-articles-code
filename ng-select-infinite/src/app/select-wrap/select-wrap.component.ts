@@ -23,8 +23,6 @@ export class SelectWrapComponent implements AfterContentInit {
   selectWrapFilteredByComponent!: SelectWrapFilteredByComponent;
   private selectedItem$ = new BehaviorSubject<any>(null);
 
-  // TODO !! Put selected item FIRST in the list of items
-
   constructor(
     private readonly dataService: DataService,
     private readonly _cdr: ChangeDetectorRef
